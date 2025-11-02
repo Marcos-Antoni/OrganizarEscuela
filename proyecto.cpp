@@ -56,7 +56,7 @@ string pieDePagina() {
     char buf[80];
     tstruct = *localtime(&now);
     strftime(buf, sizeof(buf), "%H:%M", &tstruct);
-    return "║ " + string(buf) + "          Grupo 6 seccion C ║";
+    return "║ " + string(buf) + "          Grupo E seccion C ║";
 }
 
 string padding(string str, bool extra_space = false, bool center = true) {
@@ -186,6 +186,23 @@ void navegarMenu(int limite, int exitOption, function<void(int)> dibujarMenu, fu
     int opcion = 0;
     
     while ((caracter = _getch())) {
+        // Detectar teclas especiales (flechas del teclado)
+        if (caracter == -32 || caracter == 224 || caracter == 0) {
+            char teclaEspecial = _getch();
+            if (teclaEspecial == 72) {
+                opcion = moverOpcion(opcion - 1, limite);
+                dibujarMenu(opcion);
+                cout << "Opcion: " << opcion + 1 << endl;
+                continue; // Continuar al siguiente ciclo sin procesar más
+            }
+            if (teclaEspecial == 80) {
+                opcion = moverOpcion(opcion + 1, limite);
+                dibujarMenu(opcion);
+                cout << "Opcion: " << opcion + 1 << endl;
+                continue; // Continuar al siguiente ciclo sin procesar más
+            }
+        }
+        
         if (caracter == 'w' || caracter == 'W') opcion = moverOpcion(opcion - 1, limite);
         if (caracter == 's' || caracter == 'S') opcion = moverOpcion(opcion + 1, limite);
         // if (caracter == 'e' || caracter == 'E') break;
@@ -770,8 +787,25 @@ string alinearTexto(string texto, int ancho, bool centrado = false) {
 }
 
 // Calcula la nota total de un curso (zona + parcial1 + parcial2 + examen)
-float calcularNotaTotal(const Curso& curso) {
+float calcularNotaTotal(Curso curso) {
     return curso.zona + curso.parcial1 + curso.parcial2 + curso.examen;
+}
+
+// Función reutilizable para validar entrada de calificaciones dentro de un rango
+float validarCalificacion(string mensaje, float min, float max) {
+    float valorIngresado;
+    do {
+        cout << mensaje;
+        cin >> valorIngresado;
+        if (cin.fail() || valorIngresado < min || valorIngresado > max) {
+            cout << "Error: El valor debe estar entre " << (int)min << " y " << (int)max << ". Intente nuevamente." << endl;
+            cin.clear();
+            cin.ignore(10000, '\n');
+        } else {
+            cin.ignore(); // Limpiar buffer después de entrada válida
+            return valorIngresado;
+        }
+    } while (true);
 }
 
 // Encuentra el índice de un curso por nombre (case-insensitive)
@@ -952,21 +986,12 @@ void menuEditarCalificaciones(int indiceEstudiante, int indiceCurso) {
     cout << pieDePagina() << endl;
     cout << bottomLinea() << endl;
     
-    // Pedir nuevas calificaciones
-    cout << "\nNueva Zona (0-30): ";
-    cin >> curso.zona;
-    
-    cout << "Nuevo Parcial 1 (0-15): ";
-    cin >> curso.parcial1;
-    
-    cout << "Nuevo Parcial 2 (0-15): ";
-    cin >> curso.parcial2;
-    
-    cout << "Nuevo Examen (0-40): ";
-    cin >> curso.examen;
-    
-    cin.ignore(); // Limpiar buffer
-    
+    // Pedir nuevas calificaciones con validación
+    curso.zona = validarCalificacion("\nNueva Zona (0-30): ", 0, 30);
+    curso.parcial1 = validarCalificacion("Nuevo Parcial 1 (0-15): ", 0, 15);
+    curso.parcial2 = validarCalificacion("Nuevo Parcial 2 (0-15): ", 0, 15);
+    curso.examen = validarCalificacion("Nuevo Examen (0-40): ", 0, 40);
+        
     // Guardar cambios
     guardarDatos();
     
